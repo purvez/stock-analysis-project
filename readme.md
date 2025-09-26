@@ -59,7 +59,7 @@ Activate the virtual environment:
 ```
 - **macOS/Linux:**
   ```bash
-source .venv/bin/activate
+  source .venv/bin/activate
 ```
 
 ---
