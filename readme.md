@@ -51,7 +51,7 @@ Activate the virtual environment:
 
 - **Windows (cmd):**
   ```cmd
-.venv\Scripts\activate
+  .venv\Scripts\activate
 ```
 - **Windows (PowerShell):**
   ```powershell
@@ -116,7 +116,7 @@ Press **CTRL + C** in the terminal where the app is running to stop the Streamli
 
 ---
 
-## 💡 Tips for Programmers
+## 💡 Tips
 
 - You can extend `analysis.py` for custom indicators  
 - `visualization.py` uses Plotly, but you can switch to Matplotlib or Seaborn if desired  
