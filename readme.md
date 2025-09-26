@@ -60,11 +60,11 @@ Activate the virtual environment:
 - **macOS/Linux:**
   ```bash
   source .venv/bin/activate
-```
+  ```
 
 ---
 
-### 2. Install dependencies
+ 2. Install dependencies
 
 ```bash
 pip install -r requirements.txt
