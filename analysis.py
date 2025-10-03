@@ -1,7 +1,8 @@
 import pandas as pd
 from sklearn.model_selection import TimeSeriesSplit
-from sklearn.ensemble import RandomForestRegressor
 from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
+from xgboost import XGBRegressor
+import numpy as np
 
 def compute_sma(prices, window):
     """Compute SMA using sliding window for efficiency."""
@@ -57,53 +58,83 @@ def max_profit(prices):
             profit += prices[i] - prices[i-1]
     return profit
 
-def train_and_predict(df, threshold=0.005):
-     # Strip column names (remove hidden spaces or carriage returns)
-    df.columns = df.columns.str.strip()
+def compute_ema(series, window):
+    return series.ewm(span=window, adjust=False).mean()
 
-    # Ensure Date column is datetime
+def train_and_predict(df, threshold=0.005):
+    df.columns = df.columns.str.strip()
     df['Date'] = pd.to_datetime(df['Date'])
     df = df.sort_values('Date').reset_index(drop=True)
 
-    # Features and target
-    features = ['Open', 'High', 'Low', 'Volume']
+    # Technical indicators and engineered features
+    df['SMA_5'] = compute_sma(df['Close'].tolist(), 5)
+    df['SMA_20'] = compute_sma(df['Close'].tolist(), 20)
+    df['EMA_5'] = compute_ema(df['Close'], 5)
+    df['EMA_20'] = compute_ema(df['Close'], 20)
+    df['Volatility_10'] = df['Close'].pct_change().rolling(10).std()
+    df['Momentum_10'] = df['Close'] - df['Close'].shift(10)
+    df['Rolling_Max_10'] = df['Close'].rolling(10).max()
+    df['Rolling_Min_10'] = df['Close'].rolling(10).min()
+    df = compute_daily_returns(df)
+    for lag in range(1, 11):
+        df[f'Close_Lag{lag}'] = df['Close'].shift(lag)
+        df[f'Return_Lag{lag}'] = df['Return'].shift(lag)
+
+    # Next-day returns as target
+    df['Target'] = df['Return'].shift(-1)
+
+    # Drop NA rows
+    df = df.dropna().reset_index(drop=True)
+
+    features = [
+        'Open', 'High', 'Low', 'Volume', 'SMA_5', 'SMA_20', 'EMA_5', 'EMA_20',
+        'Volatility_10', 'Momentum_10', 'Rolling_Max_10', 'Rolling_Min_10', 'Return'
+    ] + [f'Close_Lag{i}' for i in range(1, 11)] + [f'Return_Lag{i}' for i in range(1, 11)]
+
     X = df[features]
-    y = df['Close']
+    y = df['Target']
 
-    # TimeSeriesSplit
     tscv = TimeSeriesSplit(n_splits=5)
-    train_idx, test_idx = list(tscv.split(X))[-1]
-    X_train, X_test = X.iloc[train_idx], X.iloc[test_idx]
-    y_train, y_test = y.iloc[train_idx], y.iloc[test_idx]
+    # Store all test set predictions for plotting across all folds
+    test_dates_all = []
+    y_test_all = []
+    y_pred_all = []
 
-    # Train model
-    model = RandomForestRegressor(n_estimators=100, random_state=42)
-    model.fit(X_train, y_train)
+    model = XGBRegressor(
+        n_estimators=500, max_depth=8, learning_rate=0.01, subsample=0.8,
+        colsample_bytree=0.8, gamma=0.01, random_state=42, verbosity=0
+    )
 
-    # Predict on test set
-    y_pred = model.predict(X_test)
+    for train_idx, test_idx in tscv.split(X):
+        X_train, X_test = X.iloc[train_idx], X.iloc[test_idx]
+        y_train, y_test = y.iloc[train_idx], y.iloc[test_idx]
+        model.fit(X_train, y_train)
+        y_pred = model.predict(X_test)
+        test_dates_all.append(df['Date'].iloc[test_idx])
+        y_test_all.append(y_test)
+        y_pred_all.append(y_pred)
 
-    # Evaluate
-    mae = mean_absolute_error(y_test, y_pred)
-    mse = mean_squared_error(y_test, y_pred)
-    r2 = r2_score(y_test, y_pred)
+    test_dates_all = pd.concat(test_dates_all)
+    y_test_all = np.concatenate(y_test_all)
+    y_pred_all = np.concatenate(y_pred_all)
 
-    # Predict next-day using last row
-    last_row = df.iloc[-1]
-    next_day_features = pd.DataFrame([{
-        'Open': last_row['Open'],
-        'High': last_row['High'],
-        'Low': last_row['Low'],
-        'Volume': last_row['Volume']
-    }])[features]
+    # Evaluate using last fold
+    last_X_train, last_X_test = X.iloc[train_idx], X.iloc[test_idx]
+    last_y_train, last_y_test = y.iloc[train_idx], y.iloc[test_idx]
+    model.fit(last_X_train, last_y_train)
+    y_pred_last = model.predict(last_X_test)
+    mae = mean_absolute_error(last_y_test, y_pred_last)
+    mse = mean_squared_error(last_y_test, y_pred_last)
+    r2 = r2_score(last_y_test, y_pred_last)
 
-    next_day_prediction = model.predict(next_day_features)[0]
-    current_close = last_row['Close']
+    # Next-day return prediction -> convert to price
+    last_row = df.iloc[[-1]][features]
+    predicted_return = model.predict(last_row)[0]
+    current_close = df.iloc[-1]['Close']
+    next_day_prediction = current_close * (1 + predicted_return)
 
-    # Generate signal
     diff = next_day_prediction - current_close
     pct_change = diff / current_close
-
     if pct_change > threshold:
         signal = "BUY"
     elif pct_change < -threshold:
@@ -111,7 +142,6 @@ def train_and_predict(df, threshold=0.005):
     else:
         signal = "HOLD"
 
-    # Return all needed info for Streamlit + plotting
     return {
         "mae": mae,
         "mse": mse,
@@ -120,7 +150,8 @@ def train_and_predict(df, threshold=0.005):
         "current_close": current_close,
         "signal": signal,
         "pct_change": pct_change,
-        "y_test": y_test.values,    # for plotting
-        "y_pred": y_pred,           # for plotting
-        "test_dates": df['Date'].iloc[test_idx]  # for plotting
+        "test_dates": test_dates_all,
+        "y_test": y_test_all,      # actual returns, test set
+        "y_pred": y_pred_all       # predicted returns, test set
     }
+

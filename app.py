@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 from analysis import compute_sma, compute_daily_returns, count_runs, max_profit, train_and_predict
 from visualization import plot_price_with_sma, highlight_runs, plot_actual_vs_predicted
+import numpy as np
 
 st.title("📈 Stock Market Trend Analysis")
 
@@ -45,6 +46,17 @@ if uploaded_file:
         # --- ML Prediction ---
         results = train_and_predict(df)
 
+        prev_closes = []
+        test_date_indices = results['test_dates'].index if isinstance(results['test_dates'], pd.Series) else np.arange(len(results['test_dates']))
+        for idx in test_date_indices:
+            prev_idx = idx - 1 if idx - 1 >= 0 else 0
+            prev_closes.append(df['Close'].iloc[prev_idx])
+        prev_closes = np.array(prev_closes)
+
+        # Calculate actual and predicted price series
+        actual_prices = prev_closes * (1 + results['y_test'])
+        predicted_prices = prev_closes * (1 + results['y_pred'])
+
         st.write("### Model Evaluation")
         st.metric("MAE", f"{results['mae']:.4f}")
         st.metric("MSE", f"{results['mse']:.4f}")
@@ -60,6 +72,6 @@ if uploaded_file:
         from visualization import plot_actual_vs_predicted
         st.plotly_chart(plot_actual_vs_predicted(
             results['test_dates'],  # Dates of test set
-            results['y_test'],      # Actual closes
-            results['y_pred']       # Predicted closes
+            actual_prices,          # Actual closes
+            predicted_prices        # Predicted closes
         ))
