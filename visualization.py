@@ -26,3 +26,14 @@ def highlight_runs(df, runs):
                              name="Up/Down Runs"))
     fig.update_layout(title="Upward and Downward Runs", xaxis_title="Date", yaxis_title="Price")
     return fig
+
+def plot_actual_vs_predicted(dates, actual, predicted):
+    """Plot actual vs predicted closing prices."""
+    fig = go.Figure()
+    fig.add_trace(go.Scatter(x=dates, y=actual,
+                             mode='lines', name='Actual Close'))
+    fig.add_trace(go.Scatter(x=dates, y=predicted,
+                             mode='lines', name='Predicted Close'))
+    fig.update_layout(title="Actual vs Predicted Closing Prices",
+                      xaxis_title="Date", yaxis_title="Price")
+    return fig
