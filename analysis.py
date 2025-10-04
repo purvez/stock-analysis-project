@@ -30,9 +30,9 @@ def compute_daily_returns(df: pd.DataFrame):
     """
     # df['Return'] = df['Close'].pct_change()
     prices = df["Close"]
-    daily_returns = ((prices - prices.shift(1)) / prices.shift(1))
-    to_add = pd.concat({'Return': daily_returns}, axis=1)
-    df = pd.concat([df, to_add], axis=1)
+    df["Return"] = ((prices - prices.shift(1)) / prices.shift(1))
+    # to_add = pd.concat({'Return': daily_returns}, axis=1)
+    # df = pd.concat([df, to_add], axis=1)
     return df
 
 def count_runs(df):
