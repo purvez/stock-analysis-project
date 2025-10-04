@@ -18,9 +18,21 @@ def compute_sma(prices, window):
             sma.append(None)  # Not enough data yet
     return sma
 
-def compute_daily_returns(df):
-    """Compute daily returns as percentage change in close price."""
-    df['Return'] = df['Close'].pct_change()
+def compute_daily_returns(df: pd.DataFrame):
+    """
+    Compute daily returns as percentage change in close price. 
+
+    Parameters
+    df (pd.DataFrame): Stocks data frame
+
+    Returns
+    pd.DataFrame: Stocks data frame with new column "Return"
+    """
+    # df['Return'] = df['Close'].pct_change()
+    prices = df["Close"]
+    daily_returns = ((prices - prices.shift(1)) / prices.shift(1))
+    to_add = pd.concat({'Return': daily_returns}, axis=1)
+    df = pd.concat([df, to_add], axis=1)
     return df
 
 def count_runs(df):
