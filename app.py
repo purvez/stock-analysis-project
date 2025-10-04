@@ -1,7 +1,8 @@
 import streamlit as st
 import pandas as pd
-from analysis import compute_sma, compute_daily_returns, count_runs, max_profit, train_and_predict
-from visualization import plot_price_with_sma, highlight_runs, plot_actual_vs_predicted
+from data_cleaning import *
+from analysis import *
+from visualization import *
 import numpy as np
 
 st.title("📈 Stock Market Trend Analysis")
@@ -17,11 +18,17 @@ if uploaded_file:
     if 'Date' not in df.columns:
         st.error("CSV must contain a 'Date' column")
     else:
-        # Convert 'Date' to datetime and sort
-        df['Date'] = pd.to_datetime(df['Date'])
-        df = df.sort_values('Date').reset_index(drop=True)
+        clean_data(df)
 
         st.write("### Raw Data", df.head())
+        # Sidebar date filter
+        # st.sidebar.header("Filter by Date")
+        # start_date = st.sidebar.date_input("Start Date", df['Date'].min())
+        # end_date = st.sidebar.date_input("End Date", df['Date'].max())
+
+        # Filter data
+        # mask = (df['Date'] >= pd.to_datetime(start_date)) & (df['Date'] <= pd.to_datetime(end_date))
+        # df = df.loc[mask]
 
         # SMA Calculation
         window = st.slider("Select SMA Window", 2, 50, 5)
@@ -32,7 +39,9 @@ if uploaded_file:
 
         # Daily Returns
         df = compute_daily_returns(df)
-        st.write("### Daily Returns", df[['Date', 'Return']].head())
+        st.subheader("Daily returns")
+        summary = daily_returns_stats(df)
+        st.write(summary)
 
         # Runs
         runs = count_runs(df)

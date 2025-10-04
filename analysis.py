@@ -28,12 +28,24 @@ def compute_daily_returns(df: pd.DataFrame):
     Returns
     pd.DataFrame: Stocks data frame with new column "Return"
     """
-    # df['Return'] = df['Close'].pct_change()
     prices = df["Close"]
     df["Return"] = ((prices - prices.shift(1)) / prices.shift(1))
-    # to_add = pd.concat({'Return': daily_returns}, axis=1)
-    # df = pd.concat([df, to_add], axis=1)
     return df
+
+def daily_returns_stats(df: pd.DataFrame):
+    """
+    Compute summary statistics: Mean, Median, Standard Deviation, Minimum, Maximum for daily returns
+
+    Parameters
+    df (pd.DataFrame): data frame
+
+    Returns
+    pd.Series: Panda series of the various stats
+    """
+    summary = df['Return'].describe()[['mean', '50%', 'std', 'min', 'max']]
+    summary.index = ['Mean', 'Median', 'Standard Deviation', 'Minimum', 'Maximum']
+    return summary
+
 
 def count_runs(df):
     """Identify upward and downward runs."""
