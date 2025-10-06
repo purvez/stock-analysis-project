@@ -46,7 +46,7 @@ if uploaded_file:
         # Runs
         runs = count_runs(df)
         st.write("### Runs", runs)
-        st.plotly_chart(highlight_runs(df, runs))
+        st.plotly_chart(highlight_runs(df))
 
         # Max Profit
         profit = max_profit(df['Close'].tolist())

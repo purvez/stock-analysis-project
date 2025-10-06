@@ -9,21 +9,48 @@ def plot_price_with_sma(df, sma):
     fig.update_layout(title="Closing Price vs SMA", xaxis_title="Date", yaxis_title="Price")
     return fig
 
-def highlight_runs(df, runs):
+def highlight_runs(df):
     fig = go.Figure()
     fig.add_trace(go.Scatter(x=df['Date'], y=df['Close'],
                              mode='lines', name='Closing Price'))
-    colors = []
+
+    up_dates = []
+    up_prices = []
+    down_dates = []
+    down_prices = []
+    flat_dates = []
+    flat_prices = []
+
     for i in range(1, len(df)):
         if df['Close'].iloc[i] > df['Close'].iloc[i-1]:
-            colors.append("green")
+            up_dates.append(df['Date'].iloc[i])
+            up_prices.append(df['Close'].iloc[i])
         elif df['Close'].iloc[i] < df['Close'].iloc[i-1]:
-            colors.append("red")
+            down_dates.append(df['Date'].iloc[i])
+            down_prices.append(df['Close'].iloc[i])
         else:
-            colors.append("gray")
-    fig.add_trace(go.Scatter(x=df['Date'][1:], y=df['Close'][1:], 
-                             mode='markers', marker=dict(color=colors, size=8),
-                             name="Up/Down Runs"))
+            flat_dates.append(df['Date'].iloc[i])
+            flat_prices.append(df['Close'].iloc[i])  
+
+    fig.add_trace(go.Scatter(
+        x=down_dates, y=down_prices,
+        mode='markers', marker=dict(color='red', size=8),
+        name='Down'
+    ))
+
+    fig.add_trace(go.Scatter(
+        x=up_dates, y=up_prices,
+        mode='markers', marker=dict(color='green', size=8),
+        name='Up'
+    ))
+
+    fig.add_trace(go.Scatter(
+        x=flat_dates, y=flat_prices,
+        mode='markers', marker=dict(color='gray', size=8),
+        name='Flat'
+    ))
+
+
     fig.update_layout(title="Upward and Downward Runs", xaxis_title="Date", yaxis_title="Price")
     return fig
 
