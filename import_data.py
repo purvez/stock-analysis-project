@@ -68,10 +68,10 @@ class StockDataLoader:
         return df
 
 
-if __name__ == "__main__":
-    loader = StockDataLoader()
-    df = loader.load()
-    loader.description()
+# if __name__ == "__main__":
+#     loader = StockDataLoader()
+#     df = loader.load()
+#     loader.description()
 
 
 

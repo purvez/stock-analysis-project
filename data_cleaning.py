@@ -2,7 +2,12 @@ import pandas as pd
 
 def clean_data(df: pd.DataFrame):
     """
-    Cleans data by deleting rows with missing value, sort dateindex to ascending order
+    Cleans data by 
+    1. Convert Date column to DateTime
+    2. Delete any rows that cannot be converted to DateTime
+    3. Convert to '%m/%d/%Y' format
+    4. Deleting rows with missing value
+    5. Sort dateindex to ascending order
     
     Parameters
     df (pd.DataFrame): Raw stocks data frame
@@ -10,10 +15,12 @@ def clean_data(df: pd.DataFrame):
     Returns
     pd.DataFrame: Cleaned stocks data frame
     """
-    # Convert 'Date' to datetime and sort
-    df['Date'] = pd.to_datetime(df['Date'])
-    df = df.sort_values('Date').reset_index(drop=True)
+    df['Date'] = pd.to_datetime(df['Date'], errors="coerce") #Parse dates (handles mixed formats); invalid → NaT
+    df = df.dropna(subset=["Date"]) #Drop any date that cannot be converted to date time
+
+    df = df.sort_values('Date').reset_index(drop=True) #Sort date by ascending order
+    df["Date"] = df["Date"].dt.strftime('%m/%d/%Y') #Convert date to '%m/%d/%Y' fromat
     df = df.dropna() #Delete rows with any missing value
-    df = df.sort_index()
+
 
     return df
