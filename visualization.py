@@ -34,19 +34,19 @@ def highlight_runs(df):
 
     fig.add_trace(go.Scatter(
         x=down_dates, y=down_prices,
-        mode='markers', marker=dict(color='red', size=8),
+        mode='markers', marker=dict(color='red', size=4),
         name='Down'
     ))
 
     fig.add_trace(go.Scatter(
         x=up_dates, y=up_prices,
-        mode='markers', marker=dict(color='green', size=8),
+        mode='markers', marker=dict(color='green', size=4),
         name='Up'
     ))
 
     fig.add_trace(go.Scatter(
         x=flat_dates, y=flat_prices,
-        mode='markers', marker=dict(color='gray', size=8),
+        mode='markers', marker=dict(color='gray', size=4),
         name='Flat'
     ))
 
