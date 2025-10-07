@@ -3,6 +3,7 @@ import numpy as np
 import os
 from analysis import *
 from dataclasses import dataclass
+from typing import Any, Callable, Iterable
 
 @dataclass
 class TestResult:
@@ -10,18 +11,39 @@ class TestResult:
     passed: bool
     details: any = None
 
+def equal_with_nan(a: Iterable[Any], b: Iterable[Any]) -> bool:
+    """
+    NaNs in the same position are considered equal Nan == Nan
+    None and NaN are considered equivalent, None == Nan
+    """
+    if len(a) != len(b):
+        return False
+    for x, y in zip(a, b):
+        x_is_nan = isinstance(x, float) and np.isnan(x)
+        y_is_nan = isinstance(y, float) and np.isnan(y)
+        # Treat NaN == NaN
+        if x_is_nan and y_is_nan:
+            continue
+        # Treat None and NaN as equivalent for SMA "not defined yet"
+        if (x is None and y_is_nan) or (y is None and x_is_nan):
+            continue
+        if x != y:
+            return False
+    return True
 
-def validate_sma(df, window, implemented_sma):
+
+def validate_sma(df: pd.DataFrame, window:int, implemented_sma: Callable) ->tuple[bool, list]:
     """
     Validates our own implemented_sma against pandas built-in rolling mean.
 
     Args:
     df (pd.DataFrame): Stock dataset
     window (int): Number of days to average over
-    implemented_sma (pd.DataFrame): SMA of our own calculated SMA
+    implemented_sma (callable): SMA of our own calculated SMA
 
     Returns:
-    passed: bool, details: list
+    passed (bool): whether test cased pass
+    details (bool): list of mismatch with index and values of expected and actual SMA
     """
     pandas_sma = df["Close"].rolling(window=window).mean().tolist() #Calculate SMA using pandas built in rolling mean
     implemented_sma_value = implemented_sma(df['Close'].tolist(), window)
@@ -42,7 +64,65 @@ def validate_sma(df, window, implemented_sma):
         passed = False
     return passed, mismatch
 
-def validate_daily_returns(df: pd.DataFrame, implemented_daily_returns, price_col="Close", return_col="Return", tol=1e-8):
+def validate_sma_edge_cases(window: int, implemented_sma: Callable) ->tuple[bool, list]:
+    """
+    Validates our own implemented_sma against edge cases:
+    1) Data shorter than window
+    2) Data with NaN
+    3) Data with same constant prices
+
+    Args:
+    window (int): Number of days to average over
+    implemented_sma (Callable): SMA of our own calculated SMA
+
+    Returns:
+    passed (bool): whether test cased pass
+    details (bool): list of mismatch with index and values of expected and actual SMA
+    """
+
+    details = []
+
+    def case_checker(data: list, expected: list, label: str):
+        """
+        Runs each test case and updates details(list) if there are any erros.
+
+        Args: 
+        data(list): test case data
+        expected(list): expected answers based on data
+        label(str): name of test case
+
+        """
+        actual = implemented_sma(data, window)
+        if not equal_with_nan(expected, actual):
+            details.append({
+                "case": label,
+                "window": window,
+                "expected": expected,
+                "actual": actual,
+            })
+    
+    # Case 1: Data shorter than window
+    label = "Shorter than window"
+    prices_short = [100, 101]  # len=2 < window
+    expected = [None, None]
+    case_checker(prices_short, expected, label)
+
+    #Case 2: Data with nan
+    label = "Data with NaN"
+    prices_with_nan = [10, 11, float('nan'), 14, 15]
+    expected = [None, None, np.nan, np.nan, np.nan]
+    case_checker(prices_with_nan, expected, label)
+
+    #Case 3: Data with constant prices
+    label = "Constant prices"
+    prices_constant = [5,5,5,5]
+    expected = [None, None, 5.0, 5.0]
+    case_checker(prices_constant, expected, label)
+
+    return (len(details) == 0), details
+
+
+def validate_daily_returns(df: pd.DataFrame, implemented_daily_returns: Callable, price_col: str="Close", return_col: str="Return", tol: float=1e-8) ->tuple[bool, list]:
     """
     Compare custom daily returns in df[return_col] with pandas' pct_change().
 
@@ -55,10 +135,14 @@ def validate_daily_returns(df: pd.DataFrame, implemented_daily_returns, price_co
     Returns:
         passed: bool, details: list
     """
-    df = implemented_daily_returns(df)
-    pandas_returns = df[price_col].pct_change()
+    #Deep copy df since its mutable
+    df_copy = df.copy(deep=True)
+
+    df_copy = implemented_daily_returns(df_copy) #Creates the column returns 
+    pandas_returns = df_copy [price_col].pct_change()
+
     comparison = pd.DataFrame({
-        "Custom": df[return_col].dropna(),
+        "Custom": df_copy [return_col].dropna(),
         "Pandas": pandas_returns.dropna(),
     })
     comparison["Diff"] = comparison["Custom"] - comparison["Pandas"]
@@ -69,7 +153,7 @@ def validate_daily_returns(df: pd.DataFrame, implemented_daily_returns, price_co
     else:
         return False, comparison[~comparison["Match"]].to_dict(orient="records")
 
-def validate_max_profit(implemented_max_profit):
+def validate_max_profit(implemented_max_profit:Callable)->tuple[bool, list]:
     """
     Validates our own implemented max profit function against test case
 
@@ -87,7 +171,7 @@ def validate_max_profit(implemented_max_profit):
     else:
         return False, {"Expected": expected, "actual": actual}
 
-def validate_count_runs(df: pd.DataFrame, implemented_count_runs):
+def validate_count_runs(df: pd.DataFrame, implemented_count_runs: Callable)->tuple[bool, list]:
     """
     Validates our own implemented count runs against test case
 
@@ -98,7 +182,16 @@ def validate_count_runs(df: pd.DataFrame, implemented_count_runs):
     passed: bool, details: list
     """
     details = []
-    def make_df(values):
+    def make_df(values: list)-> pd.DataFrame: 
+        """
+        Creates a df with the column close and values of the test case to compare with implemented count runs
+        
+        Args:
+        values(list): values for test cases
+
+        Returns:
+        pd.DataFrame: df with column close and values
+        """
         return pd.DataFrame({'Close': values})
     
     test_set = [
@@ -144,82 +237,17 @@ def validate_count_runs(df: pd.DataFrame, implemented_count_runs):
         actual = implemented_count_runs(df)
         if actual != expected:
             details.append([name, expected, actual])
-    if len(details) == 0:
-        return True, []
-    else:
-        return False, details
 
-def validate_sma_test_cases(df, window, implemented_sma):
-    """
-    Validates our own implemented_sma against data shorter than window and Nan in data
+    return (len(details) == 0), details
 
-    Args:
-    df (pd.DataFrame): Stock dataset
-    window (int): Number of days to average over
-    implemented_sma (pd.DataFrame): SMA of our own calculated SMA
 
-    Returns:
-    passed: bool, details: list
-    """
-
-    def equal_with_nan(a, b):
-        """
-        Robust equality for two lists where:
-          - NaNs in the same position are considered equal,
-          - None and NaN are considered equivalent (common for 'undefined' SMA slots),
-          - Otherwise uses normal equality.
-        """
-        if len(a) != len(b):
-            return False
-        for x, y in zip(a, b):
-            x_is_nan = isinstance(x, float) and np.isnan(x)
-            y_is_nan = isinstance(y, float) and np.isnan(y)
-            # Treat NaN == NaN
-            if x_is_nan and y_is_nan:
-                continue
-            # Treat None and NaN as equivalent for SMA "not defined yet"
-            if (x is None and y_is_nan) or (y is None and x_is_nan):
-                continue
-            if x != y:
-                return False
-        return True
-
-    details = []
-    # Case 1: Data shorter than window
-    prices_short = [100, 101]  # len=2 < window
-    expected = [None, None]
-    actual = implemented_sma(prices_short, window)
-    if not equal_with_nan(expected, actual):
-        details.append({
-            "case": "Data shorter than window",
-            "window": window,
-            "expected": expected,
-            "actual": actual,
-        })
-
-    #Case 2: Data with nan
-    prices_with_nan = [10, 11, float('nan'), 14, 15]
-    expected = [None, None, np.nan, np.nan, np.nan]
-    actual = implemented_sma(prices_with_nan, window)
-    if not equal_with_nan(expected, actual):
-        details.append({
-            "case": "Data with NaN",
-            "window": window,
-            "expected": expected,
-            "actual": actual,
-        })
-    if len(details) == 0:
-        passed = True
-    else:
-        passed = False
-    return passed, details
 
 
 def run_all_validation(csv_path: str, window: int, validators: list):
     """
-    General validation runner that collects structured results.
+    General validation runner that collects results for each test case.
     """
-    print(f"\nRunning validations (window={window}) on csv path: {csv_path}")
+    print(f"\nRunning validations on csv path: {csv_path}")
     results: list[TestResult] = []
 
     for name, fn in validators:
@@ -249,7 +277,7 @@ def main():
     df = pd.read_csv(path)
     validators = [
         ("SMA vs pandas", lambda: validate_sma(df, window, compute_sma)),
-        ("SMA edge cases", lambda: validate_sma_test_cases(df, window, compute_sma)),    
+        ("SMA edge cases", lambda: validate_sma_edge_cases(window, compute_sma)),    
         ("Daily returns", lambda: validate_daily_returns(df, compute_daily_returns)),     
         ("Max profit", lambda: validate_max_profit(max_profit)),                   
         ("Count runs", lambda: validate_count_runs(df, count_runs)),                    

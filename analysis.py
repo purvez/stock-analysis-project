@@ -4,8 +4,17 @@ from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 from xgboost import XGBRegressor
 import numpy as np
 
-def compute_sma(prices, window):
-    """Compute SMA using sliding window for efficiency."""
+def compute_sma(prices: list, window: int) -> list:
+    """
+    Compute SMA using sliding window for efficiency.
+    
+    Parameters
+    prices (list): Stocks closing prices in a list format
+    window (int): number of days to calculate SMA
+
+    Returns
+    sma (list): list of the calculated SMA
+    """
     sma = []
     window_sum = 0
     for i in range(len(prices)):
@@ -18,7 +27,7 @@ def compute_sma(prices, window):
             sma.append(None)  # Not enough data yet
     return sma
 
-def compute_daily_returns(df: pd.DataFrame):
+def compute_daily_returns(df: pd.DataFrame) -> pd.DataFrame:
     """
     Compute daily returns as percentage change in close price. 
 
@@ -32,7 +41,7 @@ def compute_daily_returns(df: pd.DataFrame):
     df["Return"] = ((prices - prices.shift(1)) / prices.shift(1))
     return df
 
-def daily_returns_stats(df: pd.DataFrame):
+def daily_returns_stats(df: pd.DataFrame) -> pd.Series:
     """
     Compute summary statistics: Mean, Median, Standard Deviation, Minimum, Maximum for daily returns
 
@@ -47,8 +56,16 @@ def daily_returns_stats(df: pd.DataFrame):
     return summary
 
 
-def count_runs(df):
-    """Identify upward and downward runs."""
+def count_runs(df: pd.DataFrame) -> dict:
+    """
+    Identify upward and downward runs.
+
+    Parameters
+    df (pd.DataFrame): data frame
+
+    Returns
+    dict: count of upwards and downwards runs 
+    """
     runs = {'upward': [], 'downward': []}
     current_run = 0
     direction = None
@@ -74,8 +91,16 @@ def count_runs(df):
         runs[direction].append(current_run)
     return runs
 
-def max_profit(prices):
-    """Leetcode Best Time to Buy and Sell Stock II."""
+def max_profit(prices: list) -> float:
+    """
+    Leetcode Best Time to Buy and Sell Stock II.
+
+    Parameters
+    prices (list): list of closing prices
+
+    Returns
+    profit (float): max profit
+    """
     profit = 0
     for i in range(1, len(prices)):
         if prices[i] > prices[i-1]:

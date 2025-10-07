@@ -4,31 +4,34 @@ from data_cleaning import *
 from analysis import *
 from visualization import *
 import numpy as np
+from import_data import StockDataLoader
 
-st.title("📈 Stock Market Trend Analysis")
+def fetch_ticker_df(symbol: str) -> pd.DataFrame:
+    """
+    Loads the class StockDataLoader to load data when user inputs ticker symbol
 
-# File upload
-uploaded_file = st.file_uploader("Upload Stock CSV", type="csv")
-if uploaded_file:
-    df = pd.read_csv(uploaded_file)
-     # Strip any hidden spaces or carriage returns from column names
-    df.columns = df.columns.str.strip()
+    Args:
+    symbol (str): symbol for ticker
 
+    Return:
+    pd.DataFrame: Stock data
+
+    """
+    loader = StockDataLoader(tickers=symbol)  
+    return loader.load()
+
+def run_pipeline(df):
+    """
+    Runs the core functunalities
+    """
+    df.columns = df.columns.str.strip() # Strip any hidden spaces or carriage returns from column names
     # Ensure 'Date' exists
     if 'Date' not in df.columns:
         st.error("CSV must contain a 'Date' column")
     else:
-        clean_data(df)
+        clean_data(df) #Clean data
 
         st.write("### Raw Data", df.head())
-        # Sidebar date filter
-        # st.sidebar.header("Filter by Date")
-        # start_date = st.sidebar.date_input("Start Date", df['Date'].min())
-        # end_date = st.sidebar.date_input("End Date", df['Date'].max())
-
-        # Filter data
-        # mask = (df['Date'] >= pd.to_datetime(start_date)) & (df['Date'] <= pd.to_datetime(end_date))
-        # df = df.loc[mask]
 
         # SMA Calculation
         window = st.slider("Select SMA Window", 2, 50, 5)
@@ -84,3 +87,31 @@ if uploaded_file:
             actual_prices,          # Actual closes
             predicted_prices        # Predicted closes
         ))
+
+st.title("📈 Stock Market Trend Analysis")
+
+# File upload
+source = st.radio("Choose data source", ["Upload CSV", "Fetch by Ticker"], horizontal=True) #UI for user to choose data source, csv or ticker symbol
+
+if source == "Upload CSV":
+    uploaded_file = st.file_uploader("Upload Stock CSV", type="csv")
+    if uploaded_file is not None:
+        try:
+            df = pd.read_csv(uploaded_file)
+            run_pipeline(df)
+        except Exception as e: #Exception when user does not input a csv file
+            st.error(f"Failed to read CSV: {e}")
+
+else:
+    ticker = st.text_input("Ticker", value="NVDA", placeholder="e.g., AAPL")
+    if st.button("Load data"):
+        with st.spinner(f"Fetching {ticker}"):
+            try:
+                df = fetch_ticker_df(ticker)
+                if df is None or df.empty: #Exception when user does not enter a valid ticker symbol
+                    st.warning("No data returned. Check the ticker symbol.")
+                else:
+                    st.success(f"Loaded {ticker} data: {len(df)} rows.")
+                run_pipeline(df)
+            except Exception as e:
+                st.error(f"Fetch failed: {e}")
