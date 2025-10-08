@@ -48,8 +48,13 @@ def run_pipeline(df):
 
         # Runs
         runs = count_runs(df)
-        st.write("### Runs", runs)
-        st.plotly_chart(highlight_runs(df))
+        st.write(f"### Total Runs")
+        #st.write("### Runs", runs)
+        st.write(f"🔼 Upward runs: {len(runs['upward'])}")
+        st.write(f"🔽 Downward runs: {len(runs['downward'])}")
+        st.write("Longest upward run:", max(runs['upward']))
+        st.write("Longest downward run:", max(runs['downward']))
+        st.plotly_chart(highlight_runs(df, runs))
 
         # Max Profit
         profit = max_profit(df['Close'].tolist())
@@ -114,4 +119,5 @@ else:
                     st.success(f"Loaded {ticker} data: {len(df)} rows.")
                 run_pipeline(df)
             except Exception as e:
+
                 st.error(f"Fetch failed: {e}")
