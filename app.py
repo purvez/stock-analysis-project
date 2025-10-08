@@ -56,8 +56,13 @@ def run_pipeline(df):
 
         # Runs
         runs = count_runs(df)
-        st.write("### Runs", runs)
-        st.plotly_chart(highlight_runs(df))
+        st.write(f"### Total Runs")
+        #st.write("### Runs", runs)
+        st.write(f"🔼 Upward runs: {len(runs['upward'])}")
+        st.write(f"🔽 Downward runs: {len(runs['downward'])}")
+        st.write("Longest upward run:", max(runs['upward']))
+        st.write("Longest downward run:", max(runs['downward']))
+        st.plotly_chart(highlight_runs(df, runs))
 
         # Max Profit
         profit = max_profit(df['Close'].tolist())
@@ -128,6 +133,7 @@ else:
                     st.session_state.df = df  #load the data
                     st.success(f"Loaded {st.session_state.ticker} data: {len(df)} rows.")
             except Exception as e:
+
                 st.error(f"Fetch failed: {e}")
 
 # Always render pipeline if we have data in session. Whenever there is a widget change, streamlit reruns, thus we keep a session state such that for every rerun, we can reuse it, instead of asking the user to input the stock ticker again
