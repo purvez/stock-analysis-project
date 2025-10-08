@@ -52,11 +52,7 @@ Activate the virtual environment:
 - **Windows (cmd):**
   ```cmd
   .venv\Scripts\activate
-```
-- **Windows (PowerShell):**
-  ```powershell
-.\.venv\Scripts\Activate.ps1
-```
+
 - **macOS/Linux:**
   ```bash
   source .venv/bin/activate
