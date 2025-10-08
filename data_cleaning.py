@@ -17,7 +17,6 @@ def clean_data(df: pd.DataFrame):
     """
     df['Date'] = pd.to_datetime(df['Date'], errors="coerce") #Parse dates (handles mixed formats); invalid → NaT
     df = df.dropna(subset=["Date"]) #Drop any date that cannot be converted to date time
-
     df = df.sort_values('Date').reset_index(drop=True) #Sort date by ascending order
     df = df.dropna() #Delete rows with any missing value
 
