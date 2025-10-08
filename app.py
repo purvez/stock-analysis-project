@@ -62,7 +62,7 @@ def run_pipeline(df):
         st.write(f"🔽 Downward runs: {len(runs['downward'])}")
         st.write("Longest upward run:", max(runs['upward']))
         st.write("Longest downward run:", max(runs['downward']))
-        st.plotly_chart(highlight_runs(df, runs))
+        st.plotly_chart(highlight_runs(df))
 
         # Max Profit
         profit = max_profit(df['Close'].tolist())
