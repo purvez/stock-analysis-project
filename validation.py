@@ -162,13 +162,28 @@ def validate_max_profit(implemented_max_profit:Callable)->tuple[bool, list]:
     Returns:
     passed: bool, details: list
     """
-    prices = [7, 1, 5, 3, 6, 4]
-    expected = 7
-    actual = implemented_max_profit(prices)
-    if expected == actual:
-        return True, []
-    else:
-        return False, {"Expected": expected, "actual": actual}
+    details = []
+    test_set = [
+        {
+            'name': 'Leetcode sample',
+            'prices': [7, 1, 5, 3, 6, 4],
+            'expected': 7
+        },
+        {
+            'name': 'Single day',
+            'prices': [10],
+            'expected': 0
+        }]
+    for case in test_set:
+        name = case['name']
+        prices = case['prices']
+        expected = case['expected']
+
+        actual = implemented_max_profit(prices)
+        if actual != expected:
+            details.append([name, expected, actual])
+
+    return (len(details) == 0), details
 
 def validate_count_runs(df: pd.DataFrame, implemented_count_runs: Callable)->tuple[bool, list]:
     """
