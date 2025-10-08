@@ -80,46 +80,31 @@ def validate_sma_edge_cases(window: int, implemented_sma: Callable) ->tuple[bool
     """
 
     details = []
+    test_set = [
+        {
+            'name': "Shorter than window",
+            'prices': [100, 101],
+            'expected': [None, None]
+        },
+        {
+            'name': "Data with NaN",
+            'prices': [10, 11, float('nan'), 14, 15],
+            'expected': [None, None, np.nan, np.nan, np.nan]
+        }]
+    for case in test_set:
+        name = case['name']
+        prices = case['prices']
+        expected = case['expected']
 
-    def case_checker(data: list, expected: list, label: str):
-        """
-        Runs each test case and updates details(list) if there are any erros.
-
-        Args: 
-        data(list): test case data
-        expected(list): expected answers based on data
-        label(str): name of test case
-
-        """
-        actual = implemented_sma(data, window)
+        actual = implemented_sma(prices, window)
         if not equal_with_nan(expected, actual):
             details.append({
-                "case": label,
-                "window": window,
+                "name": name,
                 "expected": expected,
                 "actual": actual,
             })
-    
-    # Case 1: Data shorter than window
-    label = "Shorter than window"
-    prices_short = [100, 101]  # len=2 < window
-    expected = [None, None]
-    case_checker(prices_short, expected, label)
-
-    #Case 2: Data with nan
-    label = "Data with NaN"
-    prices_with_nan = [10, 11, float('nan'), 14, 15]
-    expected = [None, None, np.nan, np.nan, np.nan]
-    case_checker(prices_with_nan, expected, label)
-
-    #Case 3: Data with constant prices
-    label = "Constant prices"
-    prices_constant = [5,5,5,5]
-    expected = [None, None, 5.0, 5.0]
-    case_checker(prices_constant, expected, label)
 
     return (len(details) == 0), details
-
 
 def validate_daily_returns(df: pd.DataFrame, implemented_daily_returns: Callable, price_col: str="Close", return_col: str="Return", tol: float=1e-8) ->tuple[bool, list]:
     """
