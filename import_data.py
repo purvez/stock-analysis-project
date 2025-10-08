@@ -47,7 +47,6 @@ class StockDataLoader:
                            multi_level_index = False) #Remove multi index df
         data = data[["Open", "High", "Low", "Close", "Volume"]] #Column headers: Open, High, Low, CLose Volume
         data = data.reset_index()
-        data['Date'] = data['Date'].dt.strftime('%m/%d/%Y')
 
         return data
 

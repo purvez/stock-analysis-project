@@ -6,6 +6,14 @@ from visualization import *
 import numpy as np
 from import_data import StockDataLoader
 
+#Init to keep data
+if "df" not in st.session_state:
+    st.session_state.df = None
+if "mode" not in st.session_state:
+    st.session_state.mode = None
+if "ticker" not in st.session_state:
+    st.session_state.ticker = "NVDA"
+
 def fetch_ticker_df(symbol: str) -> pd.DataFrame:
     """
     Loads the class StockDataLoader to load data when user inputs ticker symbol
@@ -29,7 +37,7 @@ def run_pipeline(df):
     if 'Date' not in df.columns:
         st.error("CSV must contain a 'Date' column")
     else:
-        clean_data(df) #Clean data
+        df = clean_data(df) #Clean data
 
         st.write("### Raw Data", df.head())
 
@@ -93,25 +101,35 @@ st.title("📈 Stock Market Trend Analysis")
 # File upload
 source = st.radio("Choose data source", ["Upload CSV", "Fetch by Ticker"], horizontal=True) #UI for user to choose data source, csv or ticker symbol
 
+# Reset df when switching modes
+if source != st.session_state.mode:
+    st.session_state.mode = source
+    st.session_state.df = None
+
 if source == "Upload CSV":
-    uploaded_file = st.file_uploader("Upload Stock CSV", type="csv")
+    uploaded_file = st.file_uploader("Upload Stock CSV", type="csv") 
     if uploaded_file is not None:
         try:
-            df = pd.read_csv(uploaded_file)
-            run_pipeline(df)
-        except Exception as e: #Exception when user does not input a csv file
+            st.session_state.df = pd.read_csv(uploaded_file) #load the data
+            st.success(f"Loaded CSV: {len(st.session_state.df)} rows.")
+        except Exception as e:
             st.error(f"Failed to read CSV: {e}")
 
 else:
-    ticker = st.text_input("Ticker", value="NVDA", placeholder="e.g., AAPL")
+    # Use session-state default for convenience
+    st.session_state.ticker = st.text_input("Ticker", value=st.session_state.ticker, placeholder="e.g., AAPL")
     if st.button("Load data"):
-        with st.spinner(f"Fetching {ticker}"):
+        with st.spinner(f"Fetching {st.session_state.ticker}"):
             try:
-                df = fetch_ticker_df(ticker)
-                if df is None or df.empty: #Exception when user does not enter a valid ticker symbol
+                df = fetch_ticker_df(st.session_state.ticker)
+                if df is None or df.empty:
                     st.warning("No data returned. Check the ticker symbol.")
                 else:
-                    st.success(f"Loaded {ticker} data: {len(df)} rows.")
-                run_pipeline(df)
+                    st.session_state.df = df  #load the data
+                    st.success(f"Loaded {st.session_state.ticker} data: {len(df)} rows.")
             except Exception as e:
                 st.error(f"Fetch failed: {e}")
+
+# Always render pipeline if we have data in session. Whenever there is a widget change, streamlit reruns, thus we keep a session state such that for every rerun, we can reuse it, instead of asking the user to input the stock ticker again
+if st.session_state.df is not None:
+    run_pipeline(st.session_state.df)

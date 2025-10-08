@@ -19,7 +19,6 @@ def clean_data(df: pd.DataFrame):
     df = df.dropna(subset=["Date"]) #Drop any date that cannot be converted to date time
 
     df = df.sort_values('Date').reset_index(drop=True) #Sort date by ascending order
-    df["Date"] = df["Date"].dt.strftime('%m/%d/%Y') #Convert date to '%m/%d/%Y' fromat
     df = df.dropna() #Delete rows with any missing value
 
 
