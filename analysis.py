@@ -87,7 +87,7 @@ def compute_daily_returns(df: pd.DataFrame) -> pd.DataFrame:
     if 'Close' not in df.columns:
         raise KeyError("DataFrame must contain a 'Close' column")
     #Input validation: Check if Close column contains numeric value
-    out['Close'] = pd.to_numeric(out['Close'], errors='coerce')
+    out['Close'] = pd.to_numeric(out['Close'], errors='coerce') #Remove all rows in the column close where the value cannot be converted to numeric
     if out['Close'].isna().all():
         raise ValueError("'Close' column contains no numeric values")
     
