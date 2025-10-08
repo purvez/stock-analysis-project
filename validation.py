@@ -49,8 +49,7 @@ def validate_sma(df: pd.DataFrame, window:int, implemented_sma: Callable) ->tupl
     implemented_sma_value = implemented_sma(df['Close'].tolist(), window)
 
     mismatch = [] #Store any mismatch for debug
-    if len(pandas_sma) != len(implemented_sma_value):
-        print("Found mismatch!")
+
     for i in range(window, len(pandas_sma)): #Reason for window is to skip the first few window index where SMA cannot be calculated
         each_pd_sma_value = round(pandas_sma[i],4) #Get each individual pandas SMA value, round to 4dp
         each_implemented_sma_value = round(implemented_sma_value[i],4) #Get each individual implemented SMA value, round to 4dp
