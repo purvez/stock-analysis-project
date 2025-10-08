@@ -14,7 +14,38 @@ def compute_sma(prices: list, window: int) -> list:
 
     Returns
     sma (list): list of the calculated SMA
+    
+    Raises
+    TypeError: If prices is not a list or window is not an integer
+    ValueError: If window is not positive or prices contain non-numeric values
     """
+    # Validate prices parameter type
+    if not isinstance(prices, list):
+        raise TypeError(f"prices must be a list, got {type(prices).__name__}")
+    
+    # Handle empty list
+    if not prices:
+        return []
+    
+    # Validate window parameter type
+    if not isinstance(window, int):
+        raise TypeError(f"window must be an integer, got {type(window).__name__}")
+    
+    # Validate window is positive
+    if window <= 0:
+        raise ValueError(f"window must be positive, got {window}")
+    
+    # Validate all prices are numeric (int or float, including NaN)
+    for i, price in enumerate(prices):
+        if not isinstance(price, (int, float)):
+            raise ValueError(f"prices[{i}] must be numeric (int or float), got {type(price).__name__}: {price}")
+        # Note: We allow NaN values as they're valid floats and handled by the algorithm
+    
+    # If window is larger than prices, return all None
+    if window > len(prices):
+        return [None] * len(prices)
+    
+    # Function body(above validations passed)
     sma = []
     window_sum = 0
     for i in range(len(prices)):
@@ -26,6 +57,7 @@ def compute_sma(prices: list, window: int) -> list:
         else:
             sma.append(None)  # Not enough data yet
     return sma
+
 
 def compute_daily_returns(df: pd.DataFrame) -> pd.DataFrame:
     """
@@ -203,4 +235,5 @@ def train_and_predict(df, threshold=0.005):
         "y_test": y_test_all,      # actual returns, test set
         "y_pred": y_pred_all       # predicted returns, test set
     }
+
 
