@@ -52,9 +52,8 @@ def run_pipeline(df):
         df = compute_daily_returns(df) #Calculation of daily returns
         summary = daily_returns_stats(df) #Calculation of summary statistics
         summary = summary.to_frame('Value')  
-        st.dataframe(summary.style.format({'Value': '{:.2%}'}), use_container_width=True) #Formating as percentage
         st.subheader("Daily returns")
-        st.write(summary)
+        st.dataframe(summary.style.format({'Value': '{:.2%}'}), use_container_width=True) #Formating as percentage
 
         # Runs
         runs = count_runs(df)
