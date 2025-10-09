@@ -96,19 +96,6 @@ def compute_daily_returns(df: pd.DataFrame) -> pd.DataFrame:
     df["Return"] = ((prices - prices.shift(1)) / prices.shift(1))
     return df
 
-def daily_returns_stats(df: pd.DataFrame) -> pd.Series:
-    """
-    Compute summary statistics: Mean, Median, Standard Deviation, Minimum, Maximum for daily returns
-
-    Parameters
-    df (pd.DataFrame): data frame
-
-    Returns
-    pd.Series: Panda series of the various stats
-    """
-    summary = df['Return'].describe()[['mean', '50%', 'std', 'min', 'max']]
-    summary.index = ['Mean', 'Median', 'Standard Deviation', 'Minimum', 'Maximum']
-    return summary
 
 
 def count_runs(df: pd.DataFrame) -> dict:

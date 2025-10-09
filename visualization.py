@@ -1,4 +1,5 @@
 import plotly.graph_objects as go
+import pandas as pd
 
 def plot_price_with_sma(df, sma):
     fig = go.Figure()
@@ -64,3 +65,17 @@ def plot_actual_vs_predicted(dates, actual, predicted):
     fig.update_layout(title="Actual vs Predicted Closing Prices",
                       xaxis_title="Date", yaxis_title="Price")
     return fig
+
+def daily_returns_stats(df: pd.DataFrame) -> pd.Series:
+    """
+    Compute summary statistics: Mean, Median, Standard Deviation, Minimum, Maximum for daily returns
+
+    Parameters
+    df (pd.DataFrame): data frame
+
+    Returns
+    pd.Series: Panda series of the various stats
+    """
+    summary = df['Return'].describe()[['mean', '50%', 'std', 'min', 'max']]
+    summary.index = ['Mean', 'Median', 'Standard Deviation', 'Minimum', 'Maximum']
+    return summary
