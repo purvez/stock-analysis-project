@@ -48,10 +48,12 @@ def run_pipeline(df):
 
         st.plotly_chart(plot_price_with_sma(df, df['SMA']))
 
-        # Daily Returns
-        df = compute_daily_returns(df)
+        # Computing Daily Returns
+        df = compute_daily_returns(df) #Calculation of daily returns
+        summary = daily_returns_stats(df) #Calculation of summary statistics
+        summary = summary.to_frame('Value')  
+        st.dataframe(summary.style.format({'Value': '{:.2%}'}), use_container_width=True) #Formating as percentage
         st.subheader("Daily returns")
-        summary = daily_returns_stats(df)
         st.write(summary)
 
         # Runs
