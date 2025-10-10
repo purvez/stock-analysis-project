@@ -82,15 +82,7 @@ def compute_daily_returns(df: pd.DataFrame) -> pd.DataFrame:
     out = df.copy() #Ensure that df is not changed when doing input validation since df is a mutable variabel type
     #Input validation: Check if df is pandas.dataframe
     if not isinstance(df, pd.DataFrame):
-        raise TypeError(f"df must be a pandas DataFrame, got {type(df).__name__}")
-    #Input validation: Check if df has the column Close
-    if 'Close' not in df.columns:
-        raise KeyError("DataFrame must contain a 'Close' column")
-    #Input validation: Check if Close column contains numeric value
-    out['Close'] = pd.to_numeric(out['Close'], errors='coerce') #Remove all rows in the column close where the value cannot be converted to numeric
-    if out['Close'].isna().all():
-        raise ValueError("'Close' column contains no numeric values")
-    
+        raise TypeError(f"df must be a pandas DataFrame, got {type(df).__name__}")   
     #Calculation of daily returns
     prices = df["Close"]
     df["Return"] = ((prices - prices.shift(1)) / prices.shift(1))
