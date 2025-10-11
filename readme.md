@@ -96,13 +96,12 @@ he app accepts **CSV filTes** with at least the following columns:
 
 ### 5. Optional: Run validation.py
 
-This validation.py is used for validation, thus we believe there is no need for it to be shown in the streamlit app. To run it, users will run the
+This validation.py is used for validation, thus we believe there is no need for it to be shown in the streamlit app. There is a csv file that is default in folder for testing. To run it, users will run the
 following line in Windows(cmd)
 ```
 python validation.py
 ```
 
-The app will calculate SMA, daily returns, upward/downward runs, and max profit, and visualize the results.
 
 ---
 
