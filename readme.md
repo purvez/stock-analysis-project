@@ -22,7 +22,6 @@ stock_trend_analysis/
 │── analysis.py            # Core analysis functions (SMA, returns, runs, max profit)
 │── visualization.py       # Plotting functions (Plotly)
 │── validation.py          # Test cases for validation
-│── data/                  # Folder for CSV datasets
 │── requirements.txt       # Python dependencies
 ```
 
@@ -118,7 +117,7 @@ Press **CTRL + C** in the terminal where the app is running to stop the Streamli
 
 - You can extend `analysis.py` for custom indicators  
 - `visualization.py` uses Plotly, but you can switch to Matplotlib or Seaborn if desired  
-- The `data/` folder is optional; you can load CSVs from any path in the app  
+- You can load CSVs from any path in the app  
 
 ---
 
