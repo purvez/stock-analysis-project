@@ -16,9 +16,7 @@ def clean_data(df: pd.DataFrame):
     Returns
     pd.DataFrame: Cleaned stocks data frame
     """
-    df.columns = df.columns.astype(str).str.strip().str.capitalize() #Captilise the first char of the column header, and the rest as lower char
-    df = df.dropna() #Delete rows with any missing value
-
+    df.columns = df.columns.astype(str).str.strip().str.capitalize() #Strip and Captilise the first char of the column header, and the rest as lower char
     column_header_names = ["Date", "Open", "High", "Low", "Close", "Volume"]
     for header_name in column_header_names:
         if header_name not in df.columns:
@@ -30,6 +28,7 @@ def clean_data(df: pd.DataFrame):
         else:
             df[header_name] = pd.to_numeric(df[header_name], errors='coerce') #Remove all rows in the column where the value cannot be converted to numeric
             check_empty_col(df, header_name)
+    df = df.dropna() #Delete rows with any missing value
     return df
 
 
