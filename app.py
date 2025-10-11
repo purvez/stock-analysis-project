@@ -32,75 +32,72 @@ def run_pipeline(df):
     """
     Runs the core functunalities
     """
-    df.columns = df.columns.str.strip() # Strip any hidden spaces or carriage returns from column names
     # Ensure 'Date' exists
-    if 'Date' not in df.columns:
-        st.error("CSV must contain a 'Date' column")
-    else:
-        df = clean_data(df) #Clean data
 
-        st.write("### Raw Data", df.head())
+    df = clean_data(df) #Clean data
 
-        # SMA Calculation
-        window = st.slider("Select SMA Window", 2, 50, 5)
-        sma = compute_sma(df['Close'].tolist(), window)
-        df['SMA'] = sma
+    st.write("### Raw Data", df.head())
 
-        st.plotly_chart(plot_price_with_sma(df, df['SMA']))
+    # SMA Calculation
+    window = st.slider("Select SMA Window", 2, 50, 5)
+    sma = compute_sma(df['Close'].tolist(), window)
+    df['SMA'] = sma
 
-        # Computing Daily Returns
-        df = compute_daily_returns(df) #Calculation of daily returns
-        summary = daily_returns_stats(df) #Calculation of summary statistics
-        summary = summary.to_frame('Value')  
-        st.subheader("Daily returns")
-        st.dataframe(summary.style.format({'Value': '{:.2%}'}), use_container_width=True) #Formating as percentage
+    st.plotly_chart(plot_price_with_sma(df, df['SMA']))
 
-        # Runs
-        runs = count_runs(df)
-        st.write(f"### Total Runs")
-        #st.write("### Runs", runs)
-        st.write(f"🔼 Upward runs: {len(runs['upward'])}")
-        st.write(f"🔽 Downward runs: {len(runs['downward'])}")
-        st.write("Longest upward run:", max(runs['upward']))
-        st.write("Longest downward run:", max(runs['downward']))
-        st.plotly_chart(highlight_runs(df))
+    # Computing Daily Returns
+    df = compute_daily_returns(df) #Calculation of daily returns
+    summary = daily_returns_stats(df) #Calculation of summary statistics
+    summary = summary.to_frame('Value')  
+    st.subheader("Daily returns")
+    st.dataframe(summary.style.format({'Value': '{:.2%}'}), use_container_width=True) #Formating as percentage
 
-        # Max Profit
-        profit = max_profit(df['Close'].tolist())
-        st.success(f"💰 Maximum Profit (multiple transactions): {profit:.2f}")
+    # Runs
+    runs = count_runs(df)
+    st.write(f"### Total Runs")
+    #st.write("### Runs", runs)
+    st.write(f"🔼 Upward runs: {len(runs['upward'])}")
+    st.write(f"🔽 Downward runs: {len(runs['downward'])}")
+    st.write("Longest upward run:", max(runs['upward']))
+    st.write("Longest downward run:", max(runs['downward']))
+    st.plotly_chart(highlight_runs(df))
 
-        # --- ML Prediction ---
-        results = train_and_predict(df)
+    # Max Profit
+    profit = max_profit(df['Close'].tolist())
+    st.success(f"💰 Maximum Profit (multiple transactions): {profit:.2f}")
 
-        prev_closes = []
-        test_date_indices = results['test_dates'].index if isinstance(results['test_dates'], pd.Series) else np.arange(len(results['test_dates']))
-        for idx in test_date_indices:
-            prev_idx = idx - 1 if idx - 1 >= 0 else 0
-            prev_closes.append(df['Close'].iloc[prev_idx])
-        prev_closes = np.array(prev_closes)
+    # --- ML Prediction ---
+    results = train_and_predict(df)
 
-        # Calculate actual and predicted price series
-        actual_prices = prev_closes * (1 + results['y_test'])
-        predicted_prices = prev_closes * (1 + results['y_pred'])
+    prev_closes = []
+    test_date_indices = results['test_dates'].index if isinstance(results['test_dates'], pd.Series) else np.arange(len(results['test_dates']))
+    for idx in test_date_indices:
+        prev_idx = idx - 1 if idx - 1 >= 0 else 0
+        prev_closes.append(df['Close'].iloc[prev_idx])
+    prev_closes = np.array(prev_closes)
 
-        st.write("### Model Evaluation")
-        st.metric("MAE", f"{results['mae']:.4f}")
-        st.metric("MSE", f"{results['mse']:.4f}")
-        st.metric("R²", f"{results['r2']:.4f}")
+    # Calculate actual and predicted price series
+    actual_prices = prev_closes * (1 + results['y_test'])
+    predicted_prices = prev_closes * (1 + results['y_pred'])
 
-        st.write("### Next-Day Prediction")
-        st.metric("Predicted Close", f"{results['next_day_prediction']:.2f}")
-        st.metric("Current Close", f"{results['current_close']:.2f}")
-        st.metric("Signal", results['signal'])
-        st.metric("Expected Change (%)", f"{results['pct_change']*100:.2f}%")
+    st.write("### Model Evaluation")
+    st.metric("MAE", f"{results['mae']:.4f}")
+    st.metric("MSE", f"{results['mse']:.4f}")
+    st.metric("R²", f"{results['r2']:.4f}")
 
-        # --- Optional: Actual vs Predicted ---
-        from visualization import plot_actual_vs_predicted
-        st.plotly_chart(plot_actual_vs_predicted(
-            results['test_dates'],  # Dates of test set
-            actual_prices,          # Actual closes
-            predicted_prices        # Predicted closes
-        ))
+    st.write("### Next-Day Prediction")
+    st.metric("Predicted Close", f"{results['next_day_prediction']:.2f}")
+    st.metric("Current Close", f"{results['current_close']:.2f}")
+    st.metric("Signal", results['signal'])
+    st.metric("Expected Change (%)", f"{results['pct_change']*100:.2f}%")
+
+    # --- Optional: Actual vs Predicted ---
+    from visualization import plot_actual_vs_predicted
+    st.plotly_chart(plot_actual_vs_predicted(
+        results['test_dates'],  # Dates of test set
+        actual_prices,          # Actual closes
+        predicted_prices        # Predicted closes
+    ))
 
 st.title("📈 Stock Market Trend Analysis")
 
