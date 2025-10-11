@@ -5,8 +5,8 @@ A Python project for analyzing stock market trends with interactive visualizatio
 The project includes:
 
 - **Simple Moving Average (SMA)** calculation with sliding window optimization  
-- **Upward and downward streaks** detection  
-- **Daily returns** computation  
+- **Upward and downward streaks** runs detection  
+- **Daily returns** percentage change of returns daily
 - **Maximum profit calculation** (Best Time to Buy and Sell Stock II)  
 - **Visualization** of closing prices, SMA, and streaks with Plotly  
 
@@ -17,6 +17,8 @@ The project includes:
 ```
 stock_trend_analysis/
 │── app.py                 # Main Streamlit app
+│── import_data.py         # Import data from yfinance
+│── data_cleaning.py       # Cleans data
 │── analysis.py            # Core analysis functions (SMA, returns, runs, max profit)
 │── visualization.py       # Plotting functions (Plotly)
 │── validation.py          # Test cases for validation
@@ -28,8 +30,8 @@ stock_trend_analysis/
 
 ## ⚙️ Requirements
 
-- Python 3.8+  
-- Libraries: `streamlit`, `pandas`, `matplotlib`, `seaborn`, `plotly`  
+- Python 3.13 
+- Libraries: `streamlit`, `pandas`, `matplotlib`, `seaborn`, `plotly`, `yfinance`
 
 Install via:
 
@@ -86,7 +88,7 @@ http://localhost:8501
 
 The app accepts **CSV files** with at least the following columns:
 
-- `Date` (YYYY-MM-DD format recommended)  
+- `Date`
 - `Open`  
 - `High`  
 - `Low`  
@@ -102,7 +104,7 @@ The app will calculate SMA, daily returns, upward/downward runs, and max profit,
 - **SMA calculation** uses a sliding window approach for O(n) efficiency  
 - **Upward/downward runs** track consecutive days of price increase or decrease  
 - **Max profit calculation** follows LeetCode “Best Time to Buy and Sell Stock II” problem  
-- **Validation** includes test cases against Pandas `.rolling().mean()` and manual calculations  
+- **Validation** includes test cases against all 4 core functionalities
 
 ---
 
