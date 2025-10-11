@@ -29,7 +29,7 @@ stock_trend_analysis/
 
 ## ⚙️ Requirements
 
-- Python 3.13 
+- Python 3.13++
 - Libraries: `streamlit`, `pandas`, `matplotlib`, `seaborn`, `plotly`, `yfinance`
 
 Install via:
