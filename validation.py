@@ -7,14 +7,38 @@ from typing import Any, Callable, Iterable
 
 @dataclass
 class TestResult:
+    """
+    Container for a single validator's outcome.
+
+    Attributes
+    name : str
+        Human-readable name of the test.
+    passed : bool
+        True if the test passed; False otherwise.
+    details : Any, optional
+        Optional diagnostic details supplied by the validator
+        (e.g., list of mismatches, exception message). Defaults to None.
+    """
     name: str
     passed: bool
     details: any = None
 
 def equal_with_nan(a: Iterable[Any], b: Iterable[Any]) -> bool:
     """
-    NaNs in the same position are considered equal Nan == Nan
-    None and NaN are considered equivalent, None == Nan
+    Compare two iterables elementwise, treating NaN == NaN and None == NaN.
+
+    Two sequences are considered equal if they are the same length and for each
+    position i:
+      * both values are NaN (treated as equal), or
+      * one value is None and the other is NaN (treated as equal), or
+      * the values compare equal with ``!=`` returning False.
+
+    Args:
+    a (Iterable[Any]): Sequences to compare elementwise.
+    b (Iterable[Any]): Sequences to compare elementwise.
+       
+    Returns
+    bool :True if the sequences are equal under the NaN/None equivalence rules; False otherwise.
     """
     if len(a) != len(b):
         return False
@@ -244,7 +268,19 @@ def validate_count_runs(df: pd.DataFrame, implemented_count_runs: Callable)->tup
 
 def run_all_validation(csv_path: str, window: int, validators: list):
     """
-    General validation runner that collects results for each test case.
+    Run all validators and print a summary.
+
+    Executes each validator in validators and collects a TestResult for each. 
+    Any exceptions are caught and reported as failures.
+
+    Parameters
+    ----------
+    csv_path(str): Path to the CSV used by some validators (included for context in logs).
+    window(int): Window size used by some validators (included for context in logs).
+    validators(list): List of pairs (name: str, fn: Callable[[], tuple[bool, list]]).
+
+    Return:
+    None; This function prints a summary
     """
     print(f"\nRunning validations on csv path: {csv_path}")
     results: list[TestResult] = []
@@ -271,6 +307,15 @@ def run_all_validation(csv_path: str, window: int, validators: list):
 
 
 def main():
+    """
+    Load data, assemble validators, and runs validators
+
+    Reads stock_data.csv from the current working directory, defines the 
+    validator list and calls run_all_validation.
+
+    Returns:
+    None; This function prints a summary
+    """
     path = os.path.join(os.getcwd(), "stock_data.csv") #Get csv file path that is default in folder for testing
     window = 3 #SMA window
     df = pd.read_csv(path)
@@ -283,7 +328,6 @@ def main():
     ]
 
     run_all_validation(path, window, validators)
-
 
 if __name__ == "__main__":
     main()
