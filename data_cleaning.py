@@ -3,12 +3,12 @@ import pandas as pd
 def clean_data(df: pd.DataFrame):
     """
     Cleans data by 
-    1. Convert Date column to DateTime
-    2. Delete any rows that cannot be converted to DateTime
-    3. Convert to '%m/%d/%Y' format
-    4. Deleting rows with missing value
-    5. Sort dateindex to ascending order
-    6. Only capitalise the first char of the column header
+    1. Column normalisation and Capitalize the first char of the column header
+    2. Raise KeyError:  if column Date, Open, High, Low, Close, Volume is missing 
+    3. Convert date to the variable type DateTime
+    4. Sort the DateTime index via ascending order.
+    5. Raise error: if column contains no values after conversion to correct datatype.
+    6. Delete rows with missing value
     
     Parameters
     df (pd.DataFrame): Raw stocks data frame
@@ -33,5 +33,21 @@ def clean_data(df: pd.DataFrame):
 
 
 def check_empty_col(df, header_name):
+    """
+    Validate that a DataFrame column contains at least one non-missing value.
+    
+    Parameters
+    df(pandas.DataFrame):DataFrame to validate.
+    header_name : str
+        Name of the column to check.
+
+    Returns
+    None
+        This function performs validation only and does not return a value.
+
+    Raises
+    ValueError
+        If the specified column exists but all values are missing (NaN/None).
+    """
     if df[header_name].isna().all(): #If column name does not contain any datetime values
         raise ValueError(f"{header_name} column contains no values")
