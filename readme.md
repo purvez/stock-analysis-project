@@ -85,14 +85,22 @@ http://localhost:8501
 
 ### 4. Upload Stock Data
 
-The app accepts **CSV files** with at least the following columns:
+he app accepts **CSV filTes** with at least the following columns:
 
 - `Date`
 - `Open`  
 - `High`  
 - `Low`  
 - `Close`  
-- `Volume`  
+- `Volume`
+
+### 5. Optional: Run validation.py
+
+This validation.py is used for validation, thus we believe there is no need for it to be shown in the streamlit app. To run it, users will run the
+following line in Windows(cmd)
+```
+python validation.py
+```
 
 The app will calculate SMA, daily returns, upward/downward runs, and max profit, and visualize the results.
 
